@@ -4,7 +4,8 @@
   "description": "Dewormer is debugging tool for enviroments without native debugger statement.",
   "main": "dewormer.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "prepublish": "./node_modules/uglify-js/bin/uglifyjs --self -c -m -o ugly-browser.js"
   },
   "repository": {
     "type": "git",
@@ -16,6 +17,10 @@
     "dewormer",
     "nonstandard-enviroments"
   ],
+  "dependencies": {
+    "uglify-js": "2.4.x"
+  },
+  
   "author": "Michał \"Ginden\" Wadas",
   "license": "MIT",
   "bugs": {
