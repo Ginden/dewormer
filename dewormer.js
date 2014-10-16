@@ -15,16 +15,9 @@
         }
     }(this, function(UglifyJS) {
 
-        var basicDebuggerStatement = ';(function debuggerStatement() {'+
-            '%%%log({'+
-                'scope : %%%directives,'+
-                'stack : %%%stack'+
-            '});'+
-            'if ( typeof ACTIVE_DEBUG !== "undefined") {'+
-                // prompt is blocking function - it halts execution of JavaScript code
-                'eval(prompt("Enter code to eval"));'+
-            '}'+
-        '});';
+        var basicDebuggerStatement = ';(function debuggerStatement() {' + '%%%log({' + 'scope : %%%directives,' + 'stack : %%%stack' + '});' + 'if ( typeof ACTIVE_DEBUG !== "undefined") {' +
+        // prompt is blocking function - it halts execution of JavaScript code
+        'eval(prompt("Enter code to eval"));' + '}' + '});';
         function getScopeDirectVarsNames(scope) {
             return scope && Object.keys(scope.variables._values).map(function(el) {
                 return el.slice(1);
@@ -109,19 +102,19 @@
             var replace = {
                 stack : '(' + getStackTrace.toString() + '())',
                 log : '(console ? (function(arg) {console.log(arg)}) : Function())',
-                directives : (function() {
-                    var scopeClone = JSON.parse(JSON.stringify(scope), null, 1);
-                    var parsedScope = JSON.stringify( function parseScope(scope, base) {
-                        if (!scope) {
-                            return scope;
-                        }
+                directives : ( function() {
+                        var scopeClone = JSON.parse(JSON.stringify(scope), null, 1);
+                        var parsedScope = JSON.stringify(( function parseScope(scope, base) {
+                                if (!scope) {
+                                    return scope;
+                                }
 
-                        scope.variables = decompressArrayToKeys(scope.variables);
-                        scope.top = parseScope(scope.top, false);
-                        return scope;
-                    }(scopeClone, true));
-                    return parsedScope.replace('"', '', 'g');
-                })()
+                                scope.variables = decompressArrayToKeys(scope.variables);
+                                scope.top = parseScope(scope.top, false);
+                                return scope;
+                            }(scopeClone, true)));
+                        return parsedScope.replace('"', '', 'g');
+                    }())
             };
             var code = document.querySelector('#debug-base').innerHTML.trim();
             var data, key;
@@ -135,7 +128,32 @@
             return code;
         }
 
-        return function transform(string) {
-            return string;
+        return function transform(input, options) {
+
+            var ast = UglifyJS.parse(input);
+            var i;
+            ast.figure_out_scope();
+            var replaces = [];
+            var walker = new UglifyJS.TreeWalker(function(node) {
+                if ( node instanceof UglifyJS.AST_Debugger) {
+                    var p = walker.find_parent(UglifyJS.AST_Scope);
+                    var simplifiedScope = getSimplifiedScope(p);
+                    var replaceData = {
+                        val : node,
+                        what : createScopeLogger(simplifiedScope)
+                    };
+                    replaces.push(replaceData);
+                }
+            });
+            ast.walk(walker);
+
+            // Modified code from http://lisperator.net/blog/using-uglifyjs-for-code-refactoring/
+            for ( i = replaces.length; --i >= 0;
+            void 0) {
+                var node = replaces[i].val;
+                input = splice_string(input, node.start.pos, node.end.endpos, replaces[i].what);
+            }
+
+            return input;
         };
     }));
