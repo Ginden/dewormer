@@ -14,7 +14,7 @@
 		<section class="header">
 		  <div class="container txt-center">
 		      
-		     <h1>JS Debugger</h1>
+		     <h1><a href="http://ginden.github.io/dewormer">Dewormer.js</a></h1>
 		    
 		     <button class="btn" id="transform" type="button">Invasive debbuger -> noninvasive</button>
 		     <button class="btn" id="beautify">Beautify output</button>
@@ -56,7 +56,6 @@
 		  </div>
 		</section>
         <script>
-        
             document.querySelector('#transform').onclick = function() {
                 document.querySelector('#output').value = dewormer(document.querySelector('#input').value);
             }
@@ -65,6 +64,9 @@
                 var code = UglifyJS.parse(document.querySelector('#output').value).print(stream);
                 document.querySelector('#output').value = stream.toString();
             };
+            var stream = UglifyJS.OutputStream({beautify: true, indent_level: 4, comments: true});
+            var code = UglifyJS.parse(document.querySelector('#input').value).print(stream);
+            document.querySelector('#input').value = stream.toString();
         </script>
     </body>
 </html>
