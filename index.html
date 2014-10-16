@@ -28,6 +28,7 @@
 		        
 		        <h3>Input:</h3>
 		        <textarea class="editor" id="input">
+		        	var ACTIVE_DEBUG = true;
 		        	(function a() {
 		        		function b(){}
 		        		function c(){}
@@ -37,7 +38,10 @@
 		        			}
 		        		}
 		        		function z() {
+		        			var t = 1;
 		        			debugger;
+		        			
+		        			console.log(t)
 		        		}
 		        		var a = 5;
 		        		var wow = 'string';
