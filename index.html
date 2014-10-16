@@ -3,12 +3,8 @@
         <title>
             Noninvasive debugger statement
         </title>
-        <style>
-            textarea {
-                width: 600px;
-                height: 500px;
-            }
-        </style>
+        <link rel="stylesheet" href="dewormer.css" type="text/css" media="screen"  charset="utf-8"/>
+        <meta charset="utf-8">
     </head>
     <body>
 
@@ -53,11 +49,6 @@
                 var code = UglifyJS.parse(document.querySelector('#output').value).print(stream);
                 document.querySelector('#output').value = stream.toString();
             };
-            setTimeout(function() {
-            if (!(document.querySelector('#input').value)) {
-                document.querySelector('#input').value = document.querySelector('#my-little-code').innerHTML.trim();
-            }
-            }, 200);
         </script>
     </body>
 </html>
