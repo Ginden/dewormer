@@ -48,6 +48,7 @@ section {
   background-color: #222224;
   border: 2px solid transparent;
   outline: none;
+  color: #ccc;
   -webkit-transition: color .2s, border .2s;
           transition: color .2s, border .2s;
 }

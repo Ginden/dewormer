@@ -57,7 +57,7 @@ section {
   border: 2px solid transparent;
   outline: none;
   transition: color .2s, border .2s;
-  
+  color: #ccc;
   &:focus {
     border-color: $section-header-bg;
     color: #fff;
