@@ -1,0 +1,63 @@
+<html>
+    <head>
+        <title>
+            Noninvasive debugger statement
+        </title>
+        <style>
+            textarea {
+                width: 600px;
+                height: 500px;
+            }
+        </style>
+    </head>
+    <body>
+
+
+        <script src="ugly-browser.js"></script>
+        <script src="dewormer.js"></script>
+		<section class="header">
+		  <div class="container txt-center">
+		      
+		     <h1>JS Debugger</h1>
+		    
+		     <button class="btn" id="transform" type="button">Invasive debbuger -> noninvasive</button>
+		     <button class="btn" id="beautify">Beautify output</button>
+		  </div>
+		</section>
+		
+		<section>
+		  <div class="container">
+		    <div class="row">
+		      <div class="col half">
+		        
+		        <h3>Input:</h3>
+		        <textarea class="editor" id="input"></textarea>
+		        
+		      </div>
+		      <div class="col half">
+		        
+		        <h3>Output:</h3>
+		        <textarea class="editor" id="output"></textarea>
+		        
+		      </div>
+		    </div>
+		  </div>
+		</section>
+        <script>
+        
+            document.querySelector('#transform').onclick = function() {
+                document.querySelector('#output').value = dewormer(document.querySelector('#input').value);
+            }
+            document.querySelector('#beautify').onclick = function() {
+                var stream = UglifyJS.OutputStream({beautify: true, indent_level: 4, comments: true});
+                var code = UglifyJS.parse(document.querySelector('#output').value).print(stream);
+                document.querySelector('#output').value = stream.toString();
+            };
+            setTimeout(function() {
+            if (!(document.querySelector('#input').value)) {
+                document.querySelector('#input').value = document.querySelector('#my-little-code').innerHTML.trim();
+            }
+            }, 200);
+        </script>
+    </body>
+</html>
