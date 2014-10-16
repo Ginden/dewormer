@@ -17,7 +17,12 @@
 
         var basicDebuggerStatement = ';(function debuggerStatement() {' + '%%%log({' + 'scope : %%%directives,' + 'stack : %%%stack' + '});' + 'if ( typeof ACTIVE_DEBUG !== "undefined") {' +
         // prompt is blocking function - it halts execution of JavaScript code
-        'eval(prompt("Enter code to eval"));' + '}' + '});';
+        'eval(prompt("Enter code to eval"));' + '}' + '}());';
+
+        function splice_string(str, begin, end, replacement) {
+            return str.substr(0, begin) + replacement + str.substr(end);
+        }
+
         function getScopeDirectVarsNames(scope) {
             return scope && Object.keys(scope.variables._values).map(function(el) {
                 return el.slice(1);
@@ -71,31 +76,31 @@
             }
 
             var error = Error();
-        }
 
-        if (error.stack || error.stacktrace) {
-            return error.stack || error.stacktrace;
-        }
-        var currFunc, list;
-        try {
-            list = [];
-
-            while (true) {
-                currFunc = arguments.callee.caller;
-                if (isInArray(list, currFunc)) {
-                    list.push('Recursion (' + getFuncName(currFunc) + ')');
-                    break;
-                } else if (currFunc) {
-                    list.push(getFuncName(currFunc));
-                } else {
-                    list.push('Top level script');
-                    break;
-                }
+            if (error.stack || error.stacktrace) {
+                return error.stack || error.stacktrace;
             }
-            return 'Reconstructed stack: ' + list.join(' -> ') + ';';
-        } catch (e) {
-            // strict mode error; Shouldn't happen...
-            return 'Couldn\'t retrieve stack';
+            var currFunc, list;
+            try {
+                list = [];
+
+                while (true) {
+                    currFunc = arguments.callee.caller;
+                    if (isInArray(list, currFunc)) {
+                        list.push('Recursion (' + getFuncName(currFunc) + ')');
+                        break;
+                    } else if (currFunc) {
+                        list.push(getFuncName(currFunc));
+                    } else {
+                        list.push('Top level script');
+                        break;
+                    }
+                }
+                return 'Reconstructed stack: ' + list.join(' -> ') + ';';
+            } catch (e) {
+                // strict mode error; Shouldn't happen...
+                return 'Couldn\'t retrieve stack';
+            }
         }
 
         function createScopeLogger(scope) {
@@ -116,7 +121,7 @@
                         return parsedScope.replace('"', '', 'g');
                     }())
             };
-            var code = document.querySelector('#debug-base').innerHTML.trim();
+            var code = basicDebuggerStatement;
             var data, key;
             for (key in replace) {
                 if (Object.hasOwnProperty.call(replace, key)) {
