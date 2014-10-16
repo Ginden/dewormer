@@ -11,28 +11,10 @@
         </style>
     </head>
     <body>
-        <script id="debug-base" type="script/base-js">
-            ;(function debuggerStatement() {
-                var $$$log = ###loggingFunction###;
-                $$$log({scope: ###directives###, stack: ###stack###});
-                if (typeof ACTIVE_DEBUG !== 'undefined') {
-                    // prompt blocks execution of JavaScript
-                    eval(prompt('Enter code to eval'));
-                }
-            }());
-        </script>
-        <script id="my-little-code" type="script/base-js">
-            var a, b, c;
-            function f() {
-                function b() {
-                    var k;
-                    debugger;
-                }
-                b();
-            }
-            f();
-        </script>
-        <script src="uglify.js"></script>
+
+
+        <script src="ugly-browser.js"></script>
+        <script src="dewormer.js"></script>
         <table>
             <tr>
                 <td>
@@ -62,150 +44,9 @@
         
         </table>
         <script>
-            function splice_string(str, begin, end, replacement) {
-                return str.substr(0, begin) + replacement + str.substr(end);
-            }
-
-            function getScopeDirectVarsNames(scope) {
-                return scope && Object.keys(scope.variables._values).map(function (el) {
-                    return el.slice(1);
-                });
-            }
-            function getSimplifiedScope(scope) {
-                console.log(scope);
-                var myRet = {};
-                myRet.variables = getScopeDirectVarsNames(scope);
-                myRet.top = scope.parent_scope && getSimplifiedScope(scope.parent_scope);
-                return myRet;
-            }
-            function decompressArrayToKeys(arr) {
-                var ret = {};
-                for (var i = 0; i < arr.length; i++) {
-                    ret[arr[i]] = arr[i];
-                }
-                return ret;
-            }
-            
-            function getStackTrace() {
-                function isInArray(arr, what) {
-                    for (var i = 0; i < arr.length; i++) {
-                        if (what === arr[i]) {
-                            return true;
-                        }
-                    }
-                    return false;
-                }
-                function getFuncName(func) {
-                    if (func.name) {
-                        return func.name;
-                    }
-                    if ((function a(){}).name === 'a') {
-                        return 'anonymous';
-                    }
-                    var ret = fun.toString();
-                    ret = ret.substr('function '.length);
-                    ret = ret.substr(0, ret.indexOf('('));
-                    // doesn't work with commented code
-                    // eg.
-                    // function /* bar(!) */ foo {}
-                    // but still OK
-                    return ret;
-                }
-                var error;
-                try {
-                    (1,eval)('3=5');
-                }
-                catch (e) {
-                    error = e;
-                }
-                if (error.stack || error.stacktrace) {
-                    return error.stack || error.stacktrace;
-                }
-                var currFunc, list;
-                try {
-                    list = [];
-                    
-                    while (true) {
-                        currFunc = arguments.callee.caller;
-                        if (isInArray(list, currFunc)) {
-                            list.push('Recursion (' + getFuncName(currFunc)+')');
-                            break;
-                        }
-                        else if (currFunc) {
-                            list.push(getFuncName(currFunc));
-                        }
-                        else {
-                            list.push('Top level script');
-                            break;
-                        }
-                    }
-                    return 'Reconstructed stack: '+ list.join(' -> ')+';';
-                }
-                catch (e) { // strict mode error;
-                    
-                }
-                return 'Couldn\'t retrieve stack';
-            }
-            
-            function createScopeLogger(scope) {
-                var replace = {
-                    stack: '('+getStackTrace.toString()+'())',
-                    loggingFunction: 'console ? console.log.bind(console) : Function();',
-                    directives: (function(){
-                        var scopeClone = JSON.parse(JSON.stringify(scope), null, 1);
-                        var parsedScope = JSON.stringify(function parseScope(scope, base) {
-                            if (!scope) {
-                                return scope;
-                            }
-                            
-                            scope.variables = decompressArrayToKeys(scope.variables);
-                            scope.top = parseScope(scope.top, false);
-                            return scope;
-                        }(scopeClone, true));
-                        return parsedScope.replace('"', '', 'g');
-                    })()
-                };
-                var code = document.querySelector('#debug-base').innerHTML.trim();
-                var data, key;
-                for (key in replace) {
-                    if (Object.hasOwnProperty.call(replace, key)) {
-                        data = replace[key];
-                        code = code.replace('###'+key+'###', data);
-                    }
-                }
-                code = code.replace('\$\$\$', '_'+Math.random().toString(36).slice(2)+'_', 'g');
-                return code;
-            }
+        
             document.querySelector('#transform').onclick = function() {
-                var input = document.querySelector('#input').value;
-                var output = document.querySelector('#output');
-                var ast = window.ast = UglifyJS.parse(input);
-                ast.figure_out_scope();
-                var replaces = [];
-                var walker = new UglifyJS.TreeWalker(function(node){
-                    if (node instanceof UglifyJS.AST_Debugger) {
-                        var p = walker.find_parent(UglifyJS.AST_Scope);
-                        var simplifiedScope = getSimplifiedScope(p);
-                        
-                        
-                        var replaceData = {
-                            val: node,
-                            what: createScopeLogger(simplifiedScope)
-                        };
-                        replaces.push(replaceData);
-                    }
-                });
-                ast.walk(walker);
-                
-                // Modified code from http://lisperator.net/blog/using-uglifyjs-for-code-refactoring/
-                for (var i = replaces.length; --i >= 0;) {
-                    var node = replaces[i].val;
-                    var start_pos = node.start.pos;
-                    var end_pos = node.end.endpos;
-                    var replacement = replaces[i].what;
-                    input = splice_string(input, start_pos, end_pos, replacement);
-                }
-                output.value = input;
+                document.querySelector('#output').value = dewormer(document.querySelector('#input').value);
             }
             document.querySelector('#beautify').onclick = function() {
                 var stream = UglifyJS.OutputStream({beautify: true, indent_level: 4, comments: true});
